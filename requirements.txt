@@ -1,0 +1,5 @@
+falkordb
+strands-agents[gemini]
+streamlit
+pyvis
+python-dotenv
