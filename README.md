@@ -6,7 +6,7 @@ Built solo for **Graph Hacks: Context for AI Agents** (WeMakeDevs Ã— FalkorDB) â
 By Achukatla Raeesa Tanweer (solo).
 
 <p align="center">
-  <img src="image-1.png" alt="Agent ranks openssl above log4j using graph dependency paths" width="850">
+  <img src="docs/image-1.png" alt="Agent ranks openssl above log4j using graph dependency paths" width="850">
 </p>
 <p align="center"><em>A CVSS-only list says fix log4j first. The graph shows openssl is the bigger risk.</em></p>
 
@@ -27,7 +27,7 @@ That is a graph problem, not a text-search problem.
 Ask it in plain English. It picks graph tools, follows multi-hop dependency chains, and answers with the evidence.
 
 <p align="center">
-  <img src="image.png" alt="A plain-English question and the graph tool calls the agent makes" width="850">
+  <img src="docs/image.png" alt="A plain-English question and the graph tool calls the agent makes" width="850">
 </p>
 <p align="center"><em>The question, and the graph tools the agent chooses to answer it.</em></p>
 
@@ -40,7 +40,7 @@ A CVSS-only list says fix log4j first. The graph shows that openssl reaches more
 ## Architecture
 
 <p align="center">
-  <img src="image-2.png" alt="Architecture: Streamlit UI, Strands agent with Gemini, graph tools, FalkorDB" width="850">
+  <img src="docs/image-2.png" alt="Architecture: Streamlit UI, Strands agent with Gemini, graph tools, FalkorDB" width="850">
 </p>
 
 ## Graph schema
@@ -179,7 +179,7 @@ tools.py         graph tools (multi-hop queries, risk scoring)
 memory_tools.py  memory + action tools (cases, tickets)
 agent.py         the agent: Strands + Gemini + system prompt
 app.py           Streamlit UI with highlighted graph path
-image*.png       screenshots and architecture diagram used in this README
+docs/            screenshots and architecture diagram used in this README
 ```
 
 ## Demo flow
