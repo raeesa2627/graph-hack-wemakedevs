@@ -5,7 +5,10 @@
 Built solo for **Graph Hacks: Context for AI Agents** (WeMakeDevs × FalkorDB) — **Track 01: Agents That Act on Connected Data**.
 By Achukatla Raeesa Tanweer (solo).
 
-**Track entered:** Track 01 — Agents That Act on Connected Data.
+<p align="center">
+  <img src="image-1.png" alt="Agent ranks openssl above log4j using graph dependency paths" width="850">
+</p>
+<p align="center"><em>A CVSS-only list says fix log4j first. The graph shows openssl is the bigger risk.</em></p>
 
 ---
 
@@ -23,10 +26,12 @@ That is a graph problem, not a text-search problem.
 
 Ask it in plain English. It picks graph tools, follows multi-hop dependency chains, and answers with the evidence.
 
-![Question and What happens](image.png)
-### The result that shows why a graph matters
+<p align="center">
+  <img src="image.png" alt="A plain-English question and the graph tool calls the agent makes" width="850">
+</p>
+<p align="center"><em>The question, and the graph tools the agent chooses to answer it.</em></p>
 
-![The RESULT](image-1.png)
+### The result that shows why a graph matters
 
 A CVSS-only list says fix log4j first. The graph shows that openssl reaches more important, internet-facing services through `netty` and `grpc`, so it is the bigger risk. The agent explains this with the real paths, e.g. `payments-api → grpc → openssl → CVE-2026-1004`.
 
@@ -34,11 +39,13 @@ A CVSS-only list says fix log4j first. The graph shows that openssl reaches more
 
 ## Architecture
 
-![Architecture](image-2.png)
+<p align="center">
+  <img src="image-2.png" alt="Architecture: Streamlit UI, Strands agent with Gemini, graph tools, FalkorDB" width="850">
+</p>
 
 ## Graph schema
 
-
+```text
 (Team)-[:OWNS]->(Service)
 (Service)-[:DEPENDS_ON]->(Package)-[:DEPENDS_ON]->(Package)
 (Package)-[:HAS_VULN]->(CVE)
@@ -46,8 +53,10 @@ A CVSS-only list says fix log4j first. The graph shows that openssl reaches more
 
 -- written by the agent --
 (Case)-[:CONCERNS]->(CVE)
-(Ticket)-[:ABOUT]->(CVE), (Ticket)-[:ABOUT_SERVICE]->(Service), (Ticket)-[:ASSIGNED_TO]->(Team)
-
+(Ticket)-[:ABOUT]->(CVE)
+(Ticket)-[:ABOUT_SERVICE]->(Service)
+(Ticket)-[:ASSIGNED_TO]->(Team)
+```
 
 ## How it maps to Track 1
 
@@ -64,6 +73,7 @@ FalkorDB is the primary database and the product does not work without it: every
 ## Cypher queries the product depends on
 
 **Blast radius of a CVE — multi-hop traversal** (`tools.py`, `blast_radius`)
+
 ```cypher
 MATCH p=(s:Service)-[:DEPENDS_ON*1..4]->(:Package)-[:HAS_VULN]->(c:CVE {id:$id})
 MATCH (t:Team)-[:OWNS]->(s)
@@ -73,12 +83,14 @@ ORDER BY hops
 ```
 
 **Risk ranking input** (`tools.py`, `prioritize_cves`) — every (CVE, service) pair reachable through the dependency graph. Risk score = CVSS × Σ(service criticality × 2 if public-facing else 1), computed from these rows.
+
 ```cypher
 MATCH (s:Service)-[:DEPENDS_ON*1..4]->(:Package)-[:HAS_VULN]->(c:CVE)
 RETURN DISTINCT c.id, c.severity, c.cvss, s.name, s.criticality, s.public
 ```
 
 **Indirect impact — who calls the affected service** (`tools.py`, `downstream_impact`)
+
 ```cypher
 MATCH p=(caller:Service)-[:CALLS*1..3]->(s:Service {name:$n})
 RETURN caller.name, caller.criticality, caller.public, length(p) AS hops,
@@ -87,6 +99,7 @@ ORDER BY hops
 ```
 
 **Explain one exposure — shortest dependency path** (`tools.py`, `explain_path`)
+
 ```cypher
 MATCH p=(s:Service {name:$s})-[:DEPENDS_ON*1..4]->(:Package)-[:HAS_VULN]->(c:CVE {id:$c})
 RETURN [n IN nodes(p) | coalesce(n.name, n.id)] AS path, length(p) AS hops
@@ -94,11 +107,13 @@ ORDER BY hops LIMIT 1
 ```
 
 **Ownership** (`tools.py`, `find_owner`)
+
 ```cypher
 MATCH (t:Team)-[:OWNS]->(s:Service {name:$n}) RETURN t.name, t.oncall
 ```
 
 **Action — open a ticket routed through the graph** (`memory_tools.py`, `create_ticket`)
+
 ```cypher
 MATCH (t:Team)-[:OWNS]->(s:Service {name:$s}), (c:CVE {id:$c})
 CREATE (k:Ticket {id:$id, summary:$sum, status:'open', created:$ts})
@@ -108,6 +123,7 @@ CREATE (k)-[:ASSIGNED_TO]->(t)
 ```
 
 **Memory — save and recall investigations** (`memory_tools.py`, `save_case`, `recall_cases`)
+
 ```cypher
 CREATE (:Case {id:$id, question:$q, conclusion:$c, created:$t})
 
@@ -123,26 +139,31 @@ FalkorDB (graph database, Cypher) · Strands Agents SDK · Google Gemini · Stre
 ## Run it yourself
 
 **1. Clone and install**
+
 ```bash
-git clone <your-repo-url>
-cd graphhack-agent
+git clone https://github.com/raeesa2627/graph-hack-wemakedevs.git
+cd graph-hack-wemakedevs
 python -m venv .venv
 source .venv/bin/activate        # Windows PowerShell: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
 **2. Get a FalkorDB instance** — either:
+
 - FalkorDB Cloud (free tier): https://app.falkordb.cloud, or
 - locally: `docker run -p 6379:6379 -p 3000:3000 falkordb/falkordb`
 
 **3. Configure**
+
 ```bash
 cp .env.example .env
 # then fill in your FalkorDB host/port/user/password and your GEMINI_API_KEY
 ```
+
 Leave the `FALKORDB_` values empty to use a local instance on `localhost:6379`.
 
 **4. Build the graph and start the app**
+
 ```bash
 python seed.py          # builds the synthetic security graph (re-running resets it)
 streamlit run app.py
@@ -152,12 +173,13 @@ Test the tools without any LLM calls: `python tools.py` and `python memory_tools
 
 ## Project structure
 
-```
+```text
 seed.py          builds the synthetic graph in FalkorDB
 tools.py         graph tools (multi-hop queries, risk scoring)
 memory_tools.py  memory + action tools (cases, tickets)
 agent.py         the agent: Strands + Gemini + system prompt
 app.py           Streamlit UI with highlighted graph path
+image*.png       screenshots and architecture diagram used in this README
 ```
 
 ## Demo flow
